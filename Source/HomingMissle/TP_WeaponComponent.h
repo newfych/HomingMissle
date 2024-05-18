@@ -18,6 +18,10 @@ struct FAmmoDataTable : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	FString Name;
 
+	/** Is Homing Projectile (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	bool IsHomingProjectile;
+
 	/** Projectile Static Mesh (Hyd-ra)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	UStaticMesh* ProjectileMesh;
