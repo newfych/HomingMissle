@@ -4,7 +4,44 @@
 
 #include "CoreMinimal.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/DataTable.h"
+#include "NiagaraSystem.h"
+
 #include "TP_WeaponComponent.generated.h"
+
+USTRUCT(BlueprintType)
+struct FAmmoDataTable : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	/** Projectile Name (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	FString Name;
+
+	/** Projectile Static Mesh (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	UStaticMesh* ProjectileMesh;
+
+	/** Projectile Mesh Scale (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	FVector ProjectileMeshScale{ (1.f, 1.f, 1.f) };
+
+	/** Projectile Particle System (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	UNiagaraSystem* ProjectileEffect;
+
+	/** Projectile Sound  */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	USoundBase* ProjectileSound;
+
+	/** Icon Image */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	UTexture2D* AmmoIcon;
+
+	/** Crosshair Image */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	UTexture2D* CrosshairImage;
+};
 
 class AHomingMissleCharacter;
 
