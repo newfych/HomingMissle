@@ -20,7 +20,7 @@ struct FAmmoDataTable : public FTableRowBase
 
 	/** Is Homing Projectile (Hyd-ra)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
-	bool IsHomingProjectile;
+	bool IsHomingProjectile { false };
 
 	/** Projectile Static Mesh (Hyd-ra)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
@@ -121,6 +121,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	float TraceMaxDistance{ 50000.f };
 
+	/** Data Table for Ammo Properties (Hyd-ra)*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UDataTable* AmmoDataTable;
+
+	/** Ammo Panel Widget Class (Hyd-ra)*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UUserWidget> AmmoPanelWidgetClass;
+
 	/**
 	* Functions (Hyd-ra)
 	*/
@@ -135,6 +143,15 @@ private:
 	/** Current Target Actor (Hyd-ra)*/
 	AActor* CurrentTarget;
 
+	/** Data Table Rows Names (Hyd-ra)*/
+	TArray<FName> RowNames;
+
+	/** Index of Current Ammo (Hyd-ra)*/
+	int32 CurrentAmmoIndex{ 0 };
+
+	/** Ammo Types Count (Hyd-ra)*/
+	int32 AmmoCount{ 0 };
+
 	/**
 	 * Functions (Hyd-ra)
 	 */
@@ -143,4 +160,7 @@ private:
 
 	/** Set Custom Depth to Outline Actor (Hyd-ra)*/
 	void SetCustomDepthForActor(AActor* Actor, bool bEnableCustomDepth);
+
+	/** Retrieve Data from Data Table (Hyd-ra)*/
+	void RetrieveRowsFromDataTable();
 };

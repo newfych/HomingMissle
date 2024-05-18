@@ -65,6 +65,7 @@ void UTP_WeaponComponent::Fire()
 	}
 }
 
+/** Make the weapon Aim to Target (Hyd-ra)*/
 void UTP_WeaponComponent::Aim()
 {
 	if (Character == nullptr || Character->GetController() == nullptr || !GetWorld())
@@ -106,14 +107,31 @@ void UTP_WeaponComponent::Aim()
 	}
 }
 
+/** Switch To Previous Ammo (Hyd-ra)*/
 void UTP_WeaponComponent::PreviousAmmo()
 {
+	if (AmmoCount <= 0) return;
+	CurrentAmmoIndex -= 1;
+	if (CurrentAmmoIndex < 0)
+	{
+		CurrentAmmoIndex = AmmoCount - 1;
+	}
+	UE_LOG(LogTemp, Error, TEXT("Name: %d, %s"), CurrentAmmoIndex, *RowNames[CurrentAmmoIndex].ToString());
 }
 
+/** Switch To Next Ammo (Hyd-ra)*/
 void UTP_WeaponComponent::NextAmmo()
 {
+	if (AmmoCount <= 0) return;
+	CurrentAmmoIndex += 1;
+	if (CurrentAmmoIndex > (AmmoCount - 1))
+	{
+		CurrentAmmoIndex = 0;
+	}
+	UE_LOG(LogTemp, Error, TEXT("Name: %d, %s"), CurrentAmmoIndex, *RowNames[CurrentAmmoIndex].ToString());
 }
 
+/**  Attach Weapon*/
 void UTP_WeaponComponent::AttachWeapon(AHomingMissleCharacter* TargetCharacter)
 {
 	Character = TargetCharacter;
@@ -150,8 +168,11 @@ void UTP_WeaponComponent::AttachWeapon(AHomingMissleCharacter* TargetCharacter)
 			EnhancedInputComponent->BindAction(NextAmmoAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::NextAmmo);
 		}
 	}
+
+	RetrieveRowsFromDataTable();
 }
 
+/**  End Play*/
 void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	if (Character == nullptr)
@@ -168,6 +189,7 @@ void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
+/** Helper Function To Get Player Controller (Hyd-ra)*/
 APlayerController* UTP_WeaponComponent::GetPlayerController()
 {
 	if (!Character) return nullptr;
@@ -175,6 +197,7 @@ APlayerController* UTP_WeaponComponent::GetPlayerController()
 	return Cast<APlayerController>(Character->GetController());
 }
 
+/**  Set Custom Depth For Outline Effect(Hyd-ra)*/
 void UTP_WeaponComponent::SetCustomDepthForActor(AActor* Actor, bool bEnableCustomDepth)
 {
 	if (!Actor) return;
@@ -189,4 +212,34 @@ void UTP_WeaponComponent::SetCustomDepthForActor(AActor* Actor, bool bEnableCust
 		// Enable or disable custom depth rendering for the mesh component
 		MeshComponent->SetRenderCustomDepth(bEnableCustomDepth);
 	}
+}
+
+/**  Retrieve Data From DataTable (Hyd-ra)*/
+void UTP_WeaponComponent::RetrieveRowsFromDataTable()
+{
+	if (!AmmoDataTable) return;
+
+	FAmmoDataTable* AmmoDataRow = nullptr;
+
+	//TArray<FAmmoDataTable*> Rows;
+	//AmmoDataTable->GetAllRows<FAmmoDataTable>(TEXT("RetrieveRowsFromDataTable"), Rows);
+
+	RowNames = AmmoDataTable->GetRowNames();
+
+	for (const FName& RowName : RowNames)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Row Name: %s"), *RowName.ToString());
+
+		AmmoDataRow = AmmoDataTable->FindRow<FAmmoDataTable>(FName(RowName), TEXT(""));
+		if (AmmoDataRow)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Name: %s"), *AmmoDataRow->Name);
+		}
+	}
+	
+	/*for (FAmmoDataTable* Row : Rows)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Name: %s"), *Row->Name);
+	}*/
+	AmmoCount = RowNames.Num();
 }
