@@ -6,6 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/DataTable.h"
 #include "NiagaraSystem.h"
+#include "WeaponWidget.h"
 
 #include "TP_WeaponComponent.generated.h"
 
@@ -138,9 +139,11 @@ protected:
 
 private:
 	/** The Character holding this weapon*/
+	UPROPERTY()
 	AHomingMissleCharacter* Character;
 
 	/** Current Target Actor (Hyd-ra)*/
+	UPROPERTY()
 	AActor* CurrentTarget;
 
 	/** Data Table Rows Names (Hyd-ra)*/
@@ -152,15 +155,36 @@ private:
 	/** Ammo Types Count (Hyd-ra)*/
 	int32 AmmoCount{ 0 };
 
+	/** Weapon Widget (Hyd-ra)*/
+	UPROPERTY()
+	UWeaponWidget* WeaponWidget;
+
+	/** WeaponIcons Array (Hyd-ra)*/
+	UPROPERTY()
+	TArray<UTexture2D*> AmmoIcons;
+
+	/** Current CrossHair Image (Hyd-ra)*/
+	UPROPERTY()
+	TArray<UTexture2D*> CrossHairs;
+
 	/**
 	 * Functions (Hyd-ra)
 	 */
 	/** Helper Function To Get Player Controller (Hyd-ra)*/
-	APlayerController* GetPlayerController();
+	APlayerController* GetPlayerController() const;
 
 	/** Set Custom Depth to Outline Actor (Hyd-ra)*/
-	void SetCustomDepthForActor(AActor* Actor, bool bEnableCustomDepth);
+	static void SetCustomDepthForActor(const AActor* Actor, bool bEnableCustomDepth);
 
 	/** Retrieve Data from Data Table (Hyd-ra)*/
 	void RetrieveRowsFromDataTable();
+
+	/** Retrieve Data Table Row Data (Hyd-ra)*/
+	void GetRowData(const FName& RowName);
+
+	/** Create Weapon Widget (Hyd-ra)*/
+	void CreateWeaponWidget();
+
+	/** Update Weapon Widget (Hyd-ra)*/
+	void UpdateWeaponWidget();
 };
