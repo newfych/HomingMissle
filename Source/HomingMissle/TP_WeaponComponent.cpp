@@ -11,11 +11,13 @@
 #include "EnhancedInputSubsystems.h"
 
 // Sets default values for this component's properties
+/*
 UTP_WeaponComponent::UTP_WeaponComponent()
 {
 	// Default offset from the character location for projectiles to spawn
 	MuzzleOffset = FVector(100.0f, 0.0f, 10.0f);
 }
+*/
 
 
 void UTP_WeaponComponent::Fire()
@@ -63,6 +65,55 @@ void UTP_WeaponComponent::Fire()
 	}
 }
 
+void UTP_WeaponComponent::Aim()
+{
+	if (Character == nullptr || Character->GetController() == nullptr || !GetWorld())
+	{
+		return;
+	}
+
+	const auto PlayerController = GetPlayerController();
+
+	if (!PlayerController) return;
+
+	const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+	const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+
+	FVector ViewLocation;
+	FRotator ViewRotation;
+	PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
+
+	const FVector ShootDirection = ViewRotation.Vector();
+	const FVector TraceEnd = SpawnLocation + ShootDirection * TraceMaxDistance;
+
+	FHitResult HitResult;
+	GetWorld()->LineTraceSingleByChannel(HitResult, SpawnLocation, TraceEnd, ECollisionChannel::ECC_Visibility);
+
+	if (HitResult.bBlockingHit)
+	{
+		AActor* HitActor = HitResult.GetActor();
+		FString HitActorName = HitActor->GetActorLabel();
+
+		if (HitActor->CanBeDamaged()) {
+			UE_LOG(LogTemp, Warning, TEXT("CAN BE: %s"), *HitActorName);
+			if (CurrentTarget)
+			{
+				SetCustomDepthForActor(CurrentTarget, false);
+			}
+			SetCustomDepthForActor(HitActor, true);
+			CurrentTarget = HitActor;
+		}
+	}
+}
+
+void UTP_WeaponComponent::PreviousAmmo()
+{
+}
+
+void UTP_WeaponComponent::NextAmmo()
+{
+}
+
 void UTP_WeaponComponent::AttachWeapon(AHomingMissleCharacter* TargetCharacter)
 {
 	Character = TargetCharacter;
@@ -91,6 +142,12 @@ void UTP_WeaponComponent::AttachWeapon(AHomingMissleCharacter* TargetCharacter)
 		{
 			// Fire
 			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Fire);
+			// Aim (Hyd-ra)
+			EnhancedInputComponent->BindAction(AimAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Aim);
+			// Previous Ammo (Hyd-ra)
+			EnhancedInputComponent->BindAction(PrevAmmoAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::PreviousAmmo);
+			// Next Ammo (Hyd-ra)
+			EnhancedInputComponent->BindAction(NextAmmoAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::NextAmmo);
 		}
 	}
 }
@@ -108,5 +165,28 @@ void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		{
 			Subsystem->RemoveMappingContext(FireMappingContext);
 		}
+	}
+}
+
+APlayerController* UTP_WeaponComponent::GetPlayerController()
+{
+	if (!Character) return nullptr;
+
+	return Cast<APlayerController>(Character->GetController());
+}
+
+void UTP_WeaponComponent::SetCustomDepthForActor(AActor* Actor, bool bEnableCustomDepth)
+{
+	if (!Actor) return;
+
+	// Get all mesh components attached to the actor
+	TArray<UMeshComponent*> MeshComponents;
+	Actor->GetComponents(MeshComponents);
+
+	// Iterate through all mesh components
+	for (UMeshComponent* MeshComponent : MeshComponents)
+	{
+		// Enable or disable custom depth rendering for the mesh component
+		MeshComponent->SetRenderCustomDepth(bEnableCustomDepth);
 	}
 }

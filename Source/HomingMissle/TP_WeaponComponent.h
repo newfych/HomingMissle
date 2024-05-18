@@ -69,7 +69,7 @@ public:
 
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
-	FVector MuzzleOffset;
+	FVector MuzzleOffset { (100.0f, 0.0f, 10.0f)};
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
@@ -79,8 +79,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* FireAction;
 
+	/** Aim Input Action (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* AimAction;
+
+	/** Previous Ammo Action (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* PrevAmmoAction;
+
+	/** Next Ammo Action (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* NextAmmoAction;
+
 	/** Sets default values for this component's properties */
-	UTP_WeaponComponent();
+	//UTP_WeaponComponent();
 
 	/** Attaches the actor to a FirstPersonCharacter */
 	UFUNCTION(BlueprintCallable, Category="Weapon")
@@ -90,7 +102,28 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Weapon")
 	void Fire();
 
+	/** Make the weapon Aim to Target (Hyd-ra)*/
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void Aim();
+
+	/** Switch To Previous Ammo (Hyd-ra)*/
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void PreviousAmmo();
+
+	/** Switch To Next Ammo (Hyd-ra)*/
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void NextAmmo();
+	
+
 protected:
+	
+	/** Max Weapon Trace Distance (Hyd-ra)*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	float TraceMaxDistance{ 50000.f };
+
+	/**
+	* Functions (Hyd-ra)
+	*/
 	/** Ends gameplay for this component. */
 	UFUNCTION()
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
@@ -98,4 +131,16 @@ protected:
 private:
 	/** The Character holding this weapon*/
 	AHomingMissleCharacter* Character;
+
+	/** Current Target Actor (Hyd-ra)*/
+	AActor* CurrentTarget;
+
+	/**
+	 * Functions (Hyd-ra)
+	 */
+	/** Helper Function To Get Player Controller (Hyd-ra)*/
+	APlayerController* GetPlayerController();
+
+	/** Set Custom Depth to Outline Actor (Hyd-ra)*/
+	void SetCustomDepthForActor(AActor* Actor, bool bEnableCustomDepth);
 };
