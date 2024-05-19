@@ -29,7 +29,7 @@ struct FAmmoDataTable : public FTableRowBase
 
 	/** Projectile Mesh Scale (Hyd-ra)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
-	FVector ProjectileMeshScale{ (1.f, 1.f, 1.f) };
+	FVector ProjectileMeshScale { (1.f, 1.f, 1.f)};
 
 	/** Projectile Particle System (Hyd-ra)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
@@ -120,7 +120,7 @@ protected:
 	
 	/** Max Weapon Trace Distance (Hyd-ra)*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-	float TraceMaxDistance{ 50000.f };
+	float TraceMaxDistance{ 5000.f };
 
 	/** Muzzle Socket Name (Hyd-ra)*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
@@ -153,6 +153,9 @@ private:
 	/** Data Table Rows Names (Hyd-ra)*/
 	TArray<FName> RowNames;
 
+	/** Data Table Rows Names (Hyd-ra)*/
+	TArray<bool> IsHomingBooleans;
+
 	/** Index of Current Ammo (Hyd-ra)*/
 	int32 CurrentAmmoIndex{ 0 };
 
@@ -166,6 +169,18 @@ private:
 	/** Weapon Meshes Array (Hyd-ra)*/
 	UPROPERTY()
 	TArray<UStaticMesh*> WeaponMeshes;
+
+	/** Meshes Scales Array (Hyd-ra)*/
+	UPROPERTY()
+	TArray<FVector> MeshesScales;
+
+	/** Sounds Array (Hyd-ra)*/
+	UPROPERTY()
+	TArray<USoundBase*> Sounds;
+
+	/** Particles Array (Hyd-ra)*/
+	UPROPERTY()
+	TArray<UNiagaraSystem*> Particles;
 
 	/** WeaponIcons Array (Hyd-ra)*/
 	UPROPERTY()
@@ -196,6 +211,12 @@ private:
 	/** Update Weapon Widget (Hyd-ra)*/
 	void UpdateWeaponWidget();
 
+	/** Get Trace Hit Result (Hyd-ra)*/
+	FHitResult GetHitResult() const;
+
+	/** Calculate Trace End (Hyd-ra)*/
+	FVector CalculateTraceEnd() const;
+
 	/** Get Muzzle Socket World Location (Hyd-ra)*/
-	FVector GetSocketWorldLocation();
+	FVector GetSocketWorldLocation() const;
 };

@@ -26,14 +26,36 @@ void UTP_WeaponComponent::Fire()
 			
 			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
 			const FVector SpawnLocation = GetSocketWorldLocation();
-	
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	
-			// Spawn the projectile at the muzzle
-			World->SpawnActor<AHomingMissleProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+			FHitResult HitResult = GetHitResult();
+			FVector EndPoint = HitResult.bBlockingHit ? HitResult.ImpactPoint : CalculateTraceEnd();
+			
+			const FVector Direction = (EndPoint - SpawnLocation).GetSafeNormal();
+
+			FTransform SpawnTransform(SpawnRotation, SpawnLocation);
+			AHomingMissleProjectile* Projectile = World->SpawnActorDeferred<AHomingMissleProjectile>(ProjectileClass, SpawnTransform);
+
+			UE_LOG(LogTemp, Error, TEXT("Bool value is: %hs"), IsHomingBooleans[CurrentAmmoIndex]? "true" : "false" );
+			UE_LOG(LogTemp, Error, TEXT("MESH ! %s"), *WeaponMeshes[CurrentAmmoIndex]->GetName());
+			//UE_LOG(LogTemp, Warning, TEXT("CAN BE: %s"), *CurrentTarget->GetActorLabel());
+
+			if (IsHomingBooleans[CurrentAmmoIndex] || CurrentTarget)
+			{
+				//EndPoint = CurrentTarget->GetActorLocation();
+			}
+			if (Projectile)
+			{
+				Projectile->SetStaticMesh(WeaponMeshes[CurrentAmmoIndex]);
+				Projectile->SetMeshScale(MeshesScales[CurrentAmmoIndex]);
+				Projectile->SetSound(Sounds[CurrentAmmoIndex]);
+				Projectile->SetNiagaraSystem(Particles[CurrentAmmoIndex]);
+				Projectile->SetTargetPoint( EndPoint );
+				Projectile->FinishSpawning(SpawnTransform);
+			}
 		}
+		// Remove Target After Fire
+		SetCustomDepthForActor(CurrentTarget, false);
+		CurrentTarget = nullptr;
 	}
 	
 	// Try and play the sound if specified
@@ -62,18 +84,7 @@ void UTP_WeaponComponent::Aim()
 		return;
 	}
 
-	const auto PlayerController = GetPlayerController();
-	if (!PlayerController) return;
-	
-	FVector ViewLocation;
-	FRotator ViewRotation;
-	PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
-	
-	const FVector ShootDirection = ViewRotation.Vector();
-	const FVector TraceEnd = GetSocketWorldLocation() + ShootDirection * TraceMaxDistance;
-
-	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByChannel(HitResult, GetSocketWorldLocation(), TraceEnd, ECollisionChannel::ECC_Visibility);
+	FHitResult HitResult = GetHitResult();
 
 	if (HitResult.bBlockingHit)
 	{
@@ -81,7 +92,6 @@ void UTP_WeaponComponent::Aim()
 		FString HitActorName = HitActor->GetActorLabel();
 
 		if (HitActor->CanBeDamaged()) {
-			UE_LOG(LogTemp, Warning, TEXT("CAN BE: %s"), *HitActorName);
 			if (CurrentTarget)
 			{
 				SetCustomDepthForActor(CurrentTarget, false);
@@ -220,7 +230,11 @@ void UTP_WeaponComponent::GetRowData(const FName& RowName)
 	{
 		if (const FAmmoDataTable* AmmoDataRow = AmmoDataTable->FindRow<FAmmoDataTable>(FName(RowName), TEXT("")))
 		{
+			IsHomingBooleans.Add(AmmoDataRow->IsHomingProjectile);
 			WeaponMeshes.Add(AmmoDataRow->ProjectileMesh);
+			MeshesScales.Add(AmmoDataRow->ProjectileMeshScale);
+			Sounds.Add(AmmoDataRow->ProjectileSound);
+			Particles.Add(AmmoDataRow->ProjectileEffect);
 			AmmoIcons.Add(AmmoDataRow->AmmoIcon);
 			CrossHairs.Add(AmmoDataRow->CrosshairImage);
 		}
@@ -247,7 +261,32 @@ void UTP_WeaponComponent::UpdateWeaponWidget()
 	WeaponWidget->SetActiveIcon(CurrentAmmoIndex);
 }
 
-FVector UTP_WeaponComponent::GetSocketWorldLocation()
+FHitResult UTP_WeaponComponent::GetHitResult() const
+{
+	FHitResult HitResult;
+	
+	
+	GetWorld()->LineTraceSingleByChannel(HitResult, GetSocketWorldLocation(), CalculateTraceEnd(), ECollisionChannel::ECC_Visibility);
+	return HitResult;
+}
+
+FVector UTP_WeaponComponent::CalculateTraceEnd() const
+{
+	FVector TraceEnd;
+	const auto PlayerController = GetPlayerController();
+	if (!PlayerController) return TraceEnd;
+	
+	FVector ViewLocation;
+	FRotator ViewRotation;
+	PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
+	
+	const FVector ShootDirection = ViewRotation.Vector();
+	TraceEnd = GetSocketWorldLocation() + ShootDirection * TraceMaxDistance;
+
+	return TraceEnd;
+}
+
+FVector UTP_WeaponComponent::GetSocketWorldLocation() const
 {
 	return this->GetSocketLocation(SocketName);
 }
