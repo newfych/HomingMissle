@@ -122,6 +122,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	float TraceMaxDistance{ 50000.f };
 
+	/** Muzzle Socket Name (Hyd-ra)*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	FName SocketName { "Muzzle" };
+
 	/** Data Table for Ammo Properties (Hyd-ra)*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UDataTable* AmmoDataTable;
@@ -141,7 +145,7 @@ private:
 	/** The Character holding this weapon*/
 	UPROPERTY()
 	AHomingMissleCharacter* Character;
-
+	
 	/** Current Target Actor (Hyd-ra)*/
 	UPROPERTY()
 	AActor* CurrentTarget;
@@ -158,6 +162,10 @@ private:
 	/** Weapon Widget (Hyd-ra)*/
 	UPROPERTY()
 	UWeaponWidget* WeaponWidget;
+
+	/** Weapon Meshes Array (Hyd-ra)*/
+	UPROPERTY()
+	TArray<UStaticMesh*> WeaponMeshes;
 
 	/** WeaponIcons Array (Hyd-ra)*/
 	UPROPERTY()
@@ -187,4 +195,7 @@ private:
 
 	/** Update Weapon Widget (Hyd-ra)*/
 	void UpdateWeaponWidget();
+
+	/** Get Muzzle Socket World Location (Hyd-ra)*/
+	FVector GetSocketWorldLocation();
 };

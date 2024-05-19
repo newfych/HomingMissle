@@ -14,20 +14,18 @@
 
 void UTP_WeaponComponent::Fire()
 {
-	if (Character == nullptr || Character->GetController() == nullptr)
-	{
-		return;
-	}
+	if (Character == nullptr || Character->GetController() == nullptr) return;
 
 	// Try and fire a projectile
 	if (ProjectileClass != nullptr)
 	{
 		if (UWorld* const World = GetWorld(); World != nullptr)
 		{
-			const APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
+			const auto PlayerController = GetPlayerController();
+			if (!PlayerController) return;
+			
 			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+			const FVector SpawnLocation = GetSocketWorldLocation();
 	
 			//Set Spawn Collision Handling Override
 			FActorSpawnParameters ActorSpawnParams;
@@ -65,21 +63,17 @@ void UTP_WeaponComponent::Aim()
 	}
 
 	const auto PlayerController = GetPlayerController();
-
 	if (!PlayerController) return;
-
-	const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-	const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-
+	
 	FVector ViewLocation;
 	FRotator ViewRotation;
 	PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
-
+	
 	const FVector ShootDirection = ViewRotation.Vector();
-	const FVector TraceEnd = SpawnLocation + ShootDirection * TraceMaxDistance;
+	const FVector TraceEnd = GetSocketWorldLocation() + ShootDirection * TraceMaxDistance;
 
 	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByChannel(HitResult, SpawnLocation, TraceEnd, ECollisionChannel::ECC_Visibility);
+	GetWorld()->LineTraceSingleByChannel(HitResult, GetSocketWorldLocation(), TraceEnd, ECollisionChannel::ECC_Visibility);
 
 	if (HitResult.bBlockingHit)
 	{
@@ -226,6 +220,7 @@ void UTP_WeaponComponent::GetRowData(const FName& RowName)
 	{
 		if (const FAmmoDataTable* AmmoDataRow = AmmoDataTable->FindRow<FAmmoDataTable>(FName(RowName), TEXT("")))
 		{
+			WeaponMeshes.Add(AmmoDataRow->ProjectileMesh);
 			AmmoIcons.Add(AmmoDataRow->AmmoIcon);
 			CrossHairs.Add(AmmoDataRow->CrosshairImage);
 		}
@@ -250,4 +245,9 @@ void UTP_WeaponComponent::UpdateWeaponWidget()
 {
 	WeaponWidget->SetCrosshairImage(CrossHairs[CurrentAmmoIndex]);
 	WeaponWidget->SetActiveIcon(CurrentAmmoIndex);
+}
+
+FVector UTP_WeaponComponent::GetSocketWorldLocation()
+{
+	return this->GetSocketLocation(SocketName);
 }
