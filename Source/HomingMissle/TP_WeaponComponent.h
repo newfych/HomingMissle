@@ -23,6 +23,10 @@ struct FAmmoDataTable : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	bool IsHomingProjectile { false };
 
+	/** Is Homing Projectile (Hyd-ra)*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	float ProjectileSpeed { 2000.f};
+
 	/** Projectile Static Mesh (Hyd-ra)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	UStaticMesh* ProjectileMesh;
@@ -145,6 +149,12 @@ private:
 	/** The Character holding this weapon*/
 	UPROPERTY()
 	AHomingMissleCharacter* Character;
+
+	/** Index of Current Ammo (Hyd-ra)*/
+	int32 CurrentAmmoIndex{ 0 };
+
+	/** Ammo Types Count (Hyd-ra)*/
+	int32 AmmoCount{ 0 };
 	
 	/** Current Target Actor (Hyd-ra)*/
 	UPROPERTY()
@@ -154,13 +164,13 @@ private:
 	TArray<FName> RowNames;
 
 	/** Data Table Rows Names (Hyd-ra)*/
+	TArray<FString> AmmoNames;
+
+	/** Data Table Rows Names (Hyd-ra)*/
 	TArray<bool> IsHomingBooleans;
 
-	/** Index of Current Ammo (Hyd-ra)*/
-	int32 CurrentAmmoIndex{ 0 };
-
-	/** Ammo Types Count (Hyd-ra)*/
-	int32 AmmoCount{ 0 };
+	/** Data Table Rows Names (Hyd-ra)*/
+	TArray<float> SpeedArray;
 
 	/** Weapon Widget (Hyd-ra)*/
 	UPROPERTY()
@@ -168,7 +178,7 @@ private:
 
 	/** Weapon Meshes Array (Hyd-ra)*/
 	UPROPERTY()
-	TArray<UStaticMesh*> WeaponMeshes;
+	TArray<UStaticMesh*> AmmoMeshes;
 
 	/** Meshes Scales Array (Hyd-ra)*/
 	UPROPERTY()

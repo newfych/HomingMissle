@@ -29,49 +29,50 @@ void UTP_WeaponComponent::Fire()
 
 			FHitResult HitResult = GetHitResult();
 			FVector EndPoint = HitResult.bBlockingHit ? HitResult.ImpactPoint : CalculateTraceEnd();
-			
-			const FVector Direction = (EndPoint - SpawnLocation).GetSafeNormal();
 
 			FTransform SpawnTransform(SpawnRotation, SpawnLocation);
 			AHomingMissleProjectile* Projectile = World->SpawnActorDeferred<AHomingMissleProjectile>(ProjectileClass, SpawnTransform);
 
-			UE_LOG(LogTemp, Error, TEXT("Bool value is: %hs"), IsHomingBooleans[CurrentAmmoIndex]? "true" : "false" );
-			UE_LOG(LogTemp, Error, TEXT("MESH ! %s"), *WeaponMeshes[CurrentAmmoIndex]->GetName());
-			//UE_LOG(LogTemp, Warning, TEXT("CAN BE: %s"), *CurrentTarget->GetActorLabel());
-
-			if (IsHomingBooleans[CurrentAmmoIndex] || CurrentTarget)
+			bool IsHoming = IsHomingBooleans[CurrentAmmoIndex];
+			if (IsHoming && CurrentTarget !=nullptr)
 			{
-				//EndPoint = CurrentTarget->GetActorLocation();
+				EndPoint = CurrentTarget->GetActorLocation();
 			}
+			else
+			{
+				IsHoming = false;
+			}
+			
 			if (Projectile)
 			{
-				Projectile->SetStaticMesh(WeaponMeshes[CurrentAmmoIndex]);
+				Projectile->SetName(AmmoNames[CurrentAmmoIndex]);
+				Projectile->SetStaticMesh(AmmoMeshes[CurrentAmmoIndex]);
+				Projectile->SetTargetActor(CurrentTarget);
+				Projectile->SetIsHoming(IsHoming);
+				Projectile->SetSpeed(SpeedArray[CurrentAmmoIndex]);
 				Projectile->SetMeshScale(MeshesScales[CurrentAmmoIndex]);
 				Projectile->SetSound(Sounds[CurrentAmmoIndex]);
 				Projectile->SetNiagaraSystem(Particles[CurrentAmmoIndex]);
 				Projectile->SetTargetPoint( EndPoint );
 				Projectile->FinishSpawning(SpawnTransform);
+
+				// Try and play the sound if specified
+				if (FireSound != nullptr)
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
+				}
+	
+				// Try and play a firing animation if specified
+				if (FireAnimation != nullptr)
+				{
+					// Get the animation object for the arms mesh
+					UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+					if (AnimInstance != nullptr)
+					{
+						AnimInstance->Montage_Play(FireAnimation, 1.f);
+					}
+				}
 			}
-		}
-		// Remove Target After Fire
-		SetCustomDepthForActor(CurrentTarget, false);
-		CurrentTarget = nullptr;
-	}
-	
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
-	}
-	
-	// Try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
 		}
 	}
 }
@@ -230,8 +231,10 @@ void UTP_WeaponComponent::GetRowData(const FName& RowName)
 	{
 		if (const FAmmoDataTable* AmmoDataRow = AmmoDataTable->FindRow<FAmmoDataTable>(FName(RowName), TEXT("")))
 		{
+			AmmoMeshes.Add(AmmoDataRow->ProjectileMesh);
+			AmmoNames.Add(AmmoDataRow->Name);
 			IsHomingBooleans.Add(AmmoDataRow->IsHomingProjectile);
-			WeaponMeshes.Add(AmmoDataRow->ProjectileMesh);
+			SpeedArray.Add(AmmoDataRow->ProjectileSpeed);
 			MeshesScales.Add(AmmoDataRow->ProjectileMeshScale);
 			Sounds.Add(AmmoDataRow->ProjectileSound);
 			Particles.Add(AmmoDataRow->ProjectileEffect);
@@ -261,6 +264,7 @@ void UTP_WeaponComponent::UpdateWeaponWidget()
 	WeaponWidget->SetActiveIcon(CurrentAmmoIndex);
 }
 
+/**  Get Line Trace Hit Result (Hyd-ra)*/
 FHitResult UTP_WeaponComponent::GetHitResult() const
 {
 	FHitResult HitResult;
@@ -270,6 +274,7 @@ FHitResult UTP_WeaponComponent::GetHitResult() const
 	return HitResult;
 }
 
+/**  Calculate Trace End Point for Line Trace (Hyd-ra)*/
 FVector UTP_WeaponComponent::CalculateTraceEnd() const
 {
 	FVector TraceEnd;
@@ -286,6 +291,7 @@ FVector UTP_WeaponComponent::CalculateTraceEnd() const
 	return TraceEnd;
 }
 
+/**  Get Muzzle Socket Location (Hyd-ra)*/
 FVector UTP_WeaponComponent::GetSocketWorldLocation() const
 {
 	return this->GetSocketLocation(SocketName);
