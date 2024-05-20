@@ -90,7 +90,6 @@ void UTP_WeaponComponent::Aim()
 	if (HitResult.bBlockingHit)
 	{
 		AActor* HitActor = HitResult.GetActor();
-		FString HitActorName = HitActor->GetActorLabel();
 
 		if (HitActor->CanBeDamaged()) {
 			if (CurrentTarget)
